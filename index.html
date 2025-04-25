@@ -1,167 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Car Dashboard</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #2a2a2a;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
-    .container {
-      max-width: 1200px;
-      margin: 30px auto;
-      padding: 20px;
-      background-color: white;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .form-container {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 30px;
-    }
-    .form-container input, .form-container button {
-      padding: 10px;
-      font-size: 16px;
-      width: 250px;
-    }
-    .cars-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      justify-content: space-between;
-    }
-    .car-card {
-      background-color: #2a2a2a;
-      color: white;
-      padding: 15px;
-      border-radius: 10px;
-      width: 23%;
-      box-sizing: border-box;
-      text-align: center;
-    }
-    .car-card h4 {
-      margin: 10px 0;
-    }
-    .car-card p {
-      font-size: 14px;
-      margin-bottom: 10px;
-    }
-    .status {
-      font-weight: bold;
-    }
-    .status.waiting {
-      color: orange;
-    }
-    .status.driving {
-      color: green;
-    }
-    .status.charging {
-      color: blue;
-    }
-    footer {
-      background-color: #2a2a2a;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      position: fixed;
-      width: 100%;
-      bottom: 0;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Car Convoy System</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: 100vh;
+        }
+
+        .panel {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        #map {
+            height: 600px;
+            border-radius: 8px;
+        }
+
+        .convoy-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .convoy-card {
+            background: #333;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            background: #333;
+            border: none;
+            color: white;
+            border-radius: 4px;
+        }
+
+        button {
+            background: #00ff88;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
+    <nav style="background: #000; padding: 15px; text-align: center;">
+        <h1>Smart Car Convoy System</h1>
+    </nav>
 
-  <header>
-    <h1>Smart Car Dashboard</h1>
-    <p>Welcome to the future of travel - a convoy of smart cars!</p>
-  </header>
+    <div class="dashboard">
+        <!-- Left Panel: Ride Request -->
+        <div class="panel">
+            <h2>Plan Your Ride</h2>
+            <div class="form-group">
+                <label>Pickup Location:</label>
+                <input type="text" id="pickup" placeholder="Enter pickup location">
+            </div>
+            <div class="form-group">
+                <label>Destination:</label>
+                <input type="text" id="destination" placeholder="Enter destination">
+            </div>
+            <button onclick="requestRide()">Find Convoy</button>
+            
+            <div id="current-ride" style="margin-top: 20px; display: none;">
+                <h3>Current Ride</h3>
+                <p>Status: <span id="ride-status">Searching...</span></p>
+                <p>Convoy Leader: Car #<span id="convoy-leader">-</span></p>
+                <p>Route: <span id="current-route">-</span></p>
+            </div>
+        </div>
 
-  <div class="container">
-    <!-- Form to input destination -->
-    <div class="form-container">
-      <input type="text" id="destination" placeholder="Enter your destination..." />
-      <button onclick="submitDestination()">Submit</button>
+        <!-- Center Panel: Map -->
+        <div class="panel">
+            <div id="map"></div>
+        </div>
+
+        <!-- Right Panel: Active Convoys -->
+        <div class="panel">
+            <h2>Active Convoys</h2>
+            <div class="convoy-list" id="convoy-list">
+                <!-- Convoy cards will be dynamically added here -->
+            </div>
+        </div>
     </div>
 
-    <!-- Cars waiting to connect with convoy -->
-    <h2>Cars Available for Convoy</h2>
-    <div class="cars-list" id="cars-list">
-      <!-- Car info will be dynamically inserted here -->
-    </div>
-  </div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([51.505, -0.09], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-  <footer>
-    <p>&copy; 2025 Smart Car Project | All Rights Reserved</p>
-  </footer>
+        // Mock data
+        let convoys = [
+            {
+                id: 1,
+                route: "Downtown to Tech Park",
+                cars: 3,
+                capacity: 5,
+                path: [[51.5, -0.09], [51.51, -0.1]]
+            }
+        ];
 
-  <script>
-    // Example data (this would be dynamically loaded in a real application)
-    const cars = [
-      { id: 1, name: 'Car 1', status: 'driving', destination: 'City Center' },
-      { id: 2, name: 'Car 2', status: 'waiting', destination: 'City Center' },
-      { id: 3, name: 'Car 3', status: 'charging', destination: 'City Center' },
-      { id: 4, name: 'Car 4', status: 'waiting', destination: 'Downtown' },
-      { id: 5, name: 'Car 5', status: 'charging', destination: 'City Center' }
-    ];
+        function requestRide() {
+            const pickup = document.getElementById('pickup').value;
+            const destination = document.getElementById('destination').value;
+            
+            // Show current ride panel
+            document.getElementById('current-ride').style.display = 'block';
+            document.getElementById('current-route').textContent = `${pickup} to ${destination}`;
+            
+            // Simulate finding convoy
+            setTimeout(() => {
+                document.getElementById('ride-status').textContent = "Connected to Convoy #1";
+                document.getElementById('convoy-leader').textContent = "1";
+                updateConvoyDisplay();
+            }, 2000);
+        }
 
-    // Function to display cars
-    function displayCars(destination) {
-      const carsList = document.getElementById('cars-list');
-      carsList.innerHTML = ''; // Clear previous list
+        function updateConvoyDisplay() {
+            const list = document.getElementById('convoy-list');
+            list.innerHTML = '';
+            
+            convoys.forEach(convoy => {
+                const card = document.createElement('div');
+                card.className = 'convoy-card';
+                card.innerHTML = `
+                    <h4>Convoy #${convoy.id}</h4>
+                    <p>Route: ${convoy.route}</p>
+                    <p>Cars: ${convoy.cars} | Capacity: ${convoy.capacity}</p>
+                    <button onclick="joinConvoy(${convoy.id})">Join Convoy</button>
+                `;
+                list.appendChild(card);
+            });
+        }
 
-      const matchingCars = cars.filter(car => car.destination.toLowerCase() === destination.toLowerCase());
-      
-      if (matchingCars.length === 0) {
-        carsList.innerHTML = `<p>No cars available for the destination "${destination}".</p>`;
-        return;
-      }
+        function joinConvoy(convoyId) {
+            alert(`Joining convoy ${convoyId}...`);
+            // Here you would implement actual convoy joining logic
+        }
 
-      matchingCars.forEach(car => {
-        const carCard = document.createElement('div');
-        carCard.classList.add('car-card');
-
-        const statusClass = getStatusClass(car.status);
-
-        carCard.innerHTML = `
-          <h4>${car.name}</h4>
-          <p>Destination: ${car.destination}</p>
-          <p class="status ${statusClass}">${car.status.charAt(0).toUpperCase() + car.status.slice(1)}</p>
-        `;
-        carsList.appendChild(carCard);
-      });
-    }
-
-    // Function to determine the status class
-    function getStatusClass(status) {
-      switch(status) {
-        case 'waiting': return 'waiting';
-        case 'driving': return 'driving';
-        case 'charging': return 'charging';
-        default: return '';
-      }
-    }
-
-    // Function to handle destination submission
-    function submitDestination() {
-      const destination = document.getElementById('destination').value;
-      if (!destination) {
-        alert('Please enter a destination!');
-        return;
-      }
-      displayCars(destination);
-    }
-  </script>
-
+        // Initial load
+        updateConvoyDisplay();
+    </script>
 </body>
 </html>
-
