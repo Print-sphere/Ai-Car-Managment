@@ -1,1 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Car Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #2a2a2a;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .form-container {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+    .form-container input, .form-container button {
+      padding: 10px;
+      font-size: 16px;
+      width: 250px;
+    }
+    .cars-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-between;
+    }
+    .car-card {
+      background-color: #2a2a2a;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      width: 23%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .car-card h4 {
+      margin: 10px 0;
+    }
+    .car-card p {
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .status {
+      font-weight: bold;
+    }
+    .status.waiting {
+      color: orange;
+    }
+    .status.driving {
+      color: green;
+    }
+    .status.charging {
+      color: blue;
+    }
+    footer {
+      background-color: #2a2a2a;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Smart Car Dashboard</h1>
+    <p>Welcome to the future of travel - a convoy of smart cars!</p>
+  </header>
+
+  <div class="container">
+    <!-- Form to input destination -->
+    <div class="form-container">
+      <input type="text" id="destination" placeholder="Enter your destination..." />
+      <button onclick="submitDestination()">Submit</button>
+    </div>
+
+    <!-- Cars waiting to connect with convoy -->
+    <h2>Cars Available for Convoy</h2>
+    <div class="cars-list" id="cars-list">
+      <!-- Car info will be dynamically inserted here -->
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Smart Car Project | All Rights Reserved</p>
+  </footer>
+
+  <script>
+    // Example data (this would be dynamically loaded in a real application)
+    const cars = [
+      { id: 1, name: 'Car 1', status: 'driving', destination: 'City Center' },
+      { id: 2, name: 'Car 2', status: 'waiting', destination: 'City Center' },
+      { id: 3, name: 'Car 3', status: 'charging', destination: 'City Center' },
+      { id: 4, name: 'Car 4', status: 'waiting', destination: 'Downtown' },
+      { id: 5, name: 'Car 5', status: 'charging', destination: 'City Center' }
+    ];
+
+    // Function to display cars
+    function displayCars(destination) {
+      const carsList = document.getElementById('cars-list');
+      carsList.innerHTML = ''; // Clear previous list
+
+      const matchingCars = cars.filter(car => car.destination.toLowerCase() === destination.toLowerCase());
+      
+      if (matchingCars.length === 0) {
+        carsList.innerHTML = `<p>No cars available for the destination "${destination}".</p>`;
+        return;
+      }
+
+      matchingCars.forEach(car => {
+        const carCard = document.createElement('div');
+        carCard.classList.add('car-card');
+
+        const statusClass = getStatusClass(car.status);
+
+        carCard.innerHTML = `
+          <h4>${car.name}</h4>
+          <p>Destination: ${car.destination}</p>
+          <p class="status ${statusClass}">${car.status.charAt(0).toUpperCase() + car.status.slice(1)}</p>
+        `;
+        carsList.appendChild(carCard);
+      });
+    }
+
+    // Function to determine the status class
+    function getStatusClass(status) {
+      switch(status) {
+        case 'waiting': return 'waiting';
+        case 'driving': return 'driving';
+        case 'charging': return 'charging';
+        default: return '';
+      }
+    }
+
+    // Function to handle destination submission
+    function submitDestination() {
+      const destination = document.getElementById('destination').value;
+      if (!destination) {
+        alert('Please enter a destination!');
+        return;
+      }
+      displayCars(destination);
+    }
+  </script>
+
+</body>
+</html>
 
